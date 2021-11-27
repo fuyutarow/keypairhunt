@@ -1,0 +1,54 @@
+use serde::{Deserialize, Serialize};
+use solana_sdk::signer::keypair::Keypair;
+use std::{io::prelude::*, sync::Arc};
+use tokio::{io::AsyncWriteExt, sync::Mutex};
+
+#[derive(Debug, Default, Clone, Deserialize, Serialize)]
+struct Data {
+    address: String,
+    secret_key: [u8; 32],
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let count = Arc::new(Mutex::new(0));
+
+    for _ in 0..10 {
+        let cnt = Arc::clone(&count);
+
+        tokio::spawn(async move {
+            let mut count = cnt.lock().await;
+            loop {
+                let keypair = Keypair::new();
+                let address = keypair.to_base58_string();
+                if address.starts_with("Host") || address.to_lowercase().starts_with("xhost") {
+                    let data = Data {
+                        address,
+                        secret_key: keypair.secret().to_bytes(),
+                    };
+                    let s = serde_json::to_string(&data).expect("serialize json");
+
+                    let mut file = tokio::fs::OpenOptions::new()
+                        .write(true)
+                        .append(true)
+                        .open("keypairs.jsonl")
+                        .await
+                        .expect("open file");
+                    file.write(format!("{}\n", &s).as_bytes())
+                        .await
+                        .expect("write file");
+                    *count += 1;
+                    println!("{}", &s);
+                }
+            }
+        });
+    }
+
+    loop {
+        if *count.lock().await > 100 {
+            break;
+        }
+    }
+
+    Ok(())
+}
