@@ -1,6 +1,5 @@
-use ed25519_dalek::{ExpandedSecretKey, SecretKey};
 use serde::{Deserialize, Serialize};
-use solana_sdk::signer::keypair::Keypair;
+use solana_sdk::signer::{keypair::Keypair, Signer};
 use std::{io::prelude::*, sync::Arc};
 use tokio::{io::AsyncWriteExt, sync::Mutex};
 
@@ -25,12 +24,23 @@ async fn main() -> anyhow::Result<()> {
             let mut count = cnt.lock().await;
             loop {
                 let keypair = Keypair::new();
-                let address = keypair.to_base58_string();
+                let address = keypair.pubkey().to_string();
 
-                if address.starts_with("Host") || address.to_lowercase().starts_with("xhost") {
+                // if address.to_lowercase().starts_with("h3sw") {
+                if address.to_lowercase().starts_with("xhost")
+                    || address.to_lowercase().starts_with("fuyuta")
+                    || address.to_lowercase().starts_with("sktnky")
+                    || address.to_lowercase().starts_with("poker")
+                    || address.to_lowercase().starts_with("t3auth")
+                    || address.starts_with("Tip3")
+                    || address.starts_with("fuyu")
+                    || address.starts_with("Host3")
+                    || address.starts_with("Alice")
+                    || address.starts_with("Charl")
+                {
                     let data = Data {
                         address,
-                        secret_key: ExpandedSecretKey::from(keypair.secret()).to_bytes(),
+                        secret_key: keypair.to_bytes(),
                     };
                     let s = serde_json::to_string(&data).expect("serialize json");
 
@@ -43,7 +53,7 @@ async fn main() -> anyhow::Result<()> {
                     file.write(format!("{}\n", &s).as_bytes())
                         .await
                         .expect("write file");
-                    // *count += 1;
+                    *count += 1;
                     println!("{}", &s);
                 }
             }

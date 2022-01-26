@@ -864,7 +864,6 @@ name = "keypairhunt"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "ed25519-dalek",
  "serde",
  "serde-big-array",
  "serde_derive",
